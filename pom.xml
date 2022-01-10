@@ -172,7 +172,7 @@
          <dependency>
 		<groupId>org.framagit.mcib3d</groupId>
                 <artifactId>mcib3d-core</artifactId>
-                <version>4.0.1</version>
+                <version>4.0.63</version>
 	</dependency>
 	 <dependency>
 	  <groupId>sc.fiji</groupId>

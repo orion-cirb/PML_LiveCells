@@ -15,16 +15,13 @@ import org.scijava.command.CommandModule;
 
 import ij.IJ;
 import ij.ImagePlus;
-import ij.gui.WaitForUserDialog;
 import ij.plugin.Concatenator;
 import java.util.List;
 import mcib3d.geom.Object3D;
 import mcib3d.geom.Objects3DPopulation;
 import mcib3d.image3d.ImageHandler;
 import mcib3d.image3d.ImageInt;
-import mcib3d.tracking_dev.Association;
-import mcib3d.tracking_dev.AssociationPair;
-import mcib3d.tracking_dev.CostColocalisation;
+import mcib3d.geom2.tracking.TrackingAssociation;
 import net.imagej.Dataset;
 import net.imagej.ImageJ;
 import net.imagej.ImgPlus;
@@ -293,7 +290,7 @@ public class StarDist2D extends StarDist2DBase implements Command {
         IJ.run(labImg, "Select None", ""); 
         for (int i=1; i<labImg.getNSlices(); i++) {
              ImagePlus inext = labImg.crop((i+1)+"-"+(i+1));
-             associated[i] = associate(inext, associated[i-1], distMax);
+             associated[i] = associate(inext, associated[i-1]);
              inext.flush();
              inext.close();
         }
@@ -307,37 +304,15 @@ public class StarDist2D extends StarDist2DBase implements Command {
     }
     
     /** Associate the label of frame t-1 with slice z */
-    public ImagePlus associate(ImagePlus ip, ImagePlus ref, double distMax) {
-      
+    public ImagePlus associate(ImagePlus ip, ImagePlus ref) {
+        
         ImageHandler img1 = ImageInt.wrap(ref);
         ImageHandler img2 = ImageInt.wrap(ip);
         
-        Objects3DPopulation population1 = new Objects3DPopulation(img1);
-        Objects3DPopulation population2 = new Objects3DPopulation(img2);
-        
-        Association association = new Association(population1, population2, new CostColocalisation(population1, population2, distMax));
-        association.verbose = false;
-        association.computeAssociation();
-        // final associations
-        List<AssociationPair> finalAssociations = association.getAssociationPairs();
-        //List<Object3D> finalOrphan1 = association.getOrphan1Population().getObjectsList();
-        List<Object3D> finalOrphan2 = association.getOrphan2Population().getObjectsList();
-    
-        // create results
-        ImageHandler tracked = img1.createSameDimensions();
-                
-        // draw results
-        for (AssociationPair pair : finalAssociations) {
-            int val1 = pair.getObject3D1().getValue();
-            pair.getObject3D2().draw(tracked, val1);
-            if (val1 > max) max = val1;
-        }
-        // orphan2
-        for (Object3D object3D : finalOrphan2) {
-            max++;
-            object3D.draw(tracked, max);
-        }
-        return tracked.getImagePlus();
+        TrackingAssociation association = new TrackingAssociation(img1, img2);
+        ImageHandler trackedImage = association.getTrackedImage();
+
+        return trackedImage.getImagePlus();
     }
     
     public void setParams(double percentileBottomVar, double percentileTopVar, double probThreshVar, double overlapThreshVar, String outPutType){
@@ -348,31 +323,6 @@ public class StarDist2D extends StarDist2DBase implements Command {
     probThresh = probThreshVar;
     nmsThresh = overlapThreshVar;
     outputType = outPutType;
-    /*switch(modelType){
-        case "file" :
-            paramCNN.put("modelFile", model);
-            break;
-        case "url" :
-            paramCNN.put("modelUrl", model);
-            break;
-        default:
-            final StarDist2DModel pretrainedModel = new StarDist2DModel(StarDist2DModel.class.getClassLoader().getResource("models"+File.pathSeparator+"dsb2018_heavy_augment.zip"), 0.479071, 0.3, 16, 96);
-            if (pretrainedModel.canGetFile()) {
-                final File file = pretrainedModel.getFile();
-                paramCNN.put("modelFile", file);
-            }
-            else {
-                paramCNN.put("modelUrl", pretrainedModel.url);
-            }
-            paramCNN.put("blockMultiple", pretrainedModel.sizeDivBy);
-            paramCNN.put("overlap", pretrainedModel.tileOverlap);
-
-    }*/
-
-
-   /* } catch (IOException e) {
-        e.printStackTrace();
-    } */
 }
 
 }
