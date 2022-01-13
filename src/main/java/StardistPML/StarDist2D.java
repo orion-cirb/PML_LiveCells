@@ -64,6 +64,10 @@ public class StarDist2D extends StarDist2DBase implements Command {
     private Object obj_;
     private File tmpModelFile_ = null;
     
+    // tracking association
+    private double minColoc = 0.1;     
+    private double maxBB = 0;
+    private int costChoice = 0 ;
     
     private int max = 0; // for association labels
     
@@ -309,7 +313,7 @@ public class StarDist2D extends StarDist2DBase implements Command {
         ImageHandler img1 = ImageInt.wrap(ref);
         ImageHandler img2 = ImageInt.wrap(ip);
         
-        TrackingAssociation association = new TrackingAssociation(img1, img2);
+        TrackingAssociation association = new TrackingAssociation(img1, img2, maxBB, minColoc);
         ImageHandler trackedImage = association.getTrackedImage();
 
         return trackedImage.getImagePlus();
